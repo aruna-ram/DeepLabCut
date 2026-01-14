@@ -20,12 +20,13 @@ Licensed under GNU Lesser General Public License v3.0
 
 
 import math
-
 import cv2
 import numpy as np
 from skimage.util import img_as_ubyte
 from sklearn.cluster import MiniBatchKMeans
 from tqdm import tqdm
+
+
 
 
 def UniformFrames(clip, numframes2pick, start, stop, Index=None):
@@ -109,6 +110,18 @@ def UniformFramescv2(cap, numframes2pick, start, stop, Index=None):
         else:
             return list(Index)
 
+
+def AllFramescv2(cap, start, stop):
+    """Extract all frames from the video."""
+    nframes = len(cap)
+    print(
+        "Extracting all frames from",
+        round(start * nframes * 1.0 / cap.fps, 2),
+        " seconds to",
+        round(stop * nframes * 1.0 / cap.fps, 2),
+        " seconds.",
+    )
+    return list(np.arange(start * nframes, stop * nframes)) # return as list to match the return type of the other functions
 
 def KmeansbasedFrameselection(
     clip,
