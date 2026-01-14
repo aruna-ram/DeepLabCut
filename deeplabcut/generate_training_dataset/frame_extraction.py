@@ -292,6 +292,21 @@ def extract_frames(
                 "Perhaps consider extracting more, or a natural number of frames."
             )
 
+
+    ##====INSERT BY ARUNA==============
+    elif mode == "all":
+        # New mode: extract ALL frames
+        if opencv:
+            cap = VideoWriter(video)
+            nframes = len(cap)
+        else:
+            clip = VideoFileClip(video)
+            nframes = int(np.ceil(clip.duration * clip.fps))
+
+        frames2pick = range(nframes)
+        print(f"Extracting ALL {nframes} frames from video: {video}")
+
+
         if opencv:
             from deeplabcut.utils.auxfun_videos import VideoWriter
         else:
