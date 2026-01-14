@@ -252,6 +252,8 @@ def write_config(configname, cfg):
         for key in cfg.keys():
             cfg_file[key] = cfg[key]
 
+        _sanitize_video_sets_paths(cfg_file)
+
         # Adding default value for variable skeleton and skeleton_color for backward compatibility.
         if not "skeleton" in cfg.keys():
             cfg_file["skeleton"] = []
@@ -364,7 +366,46 @@ def read_plainconfig(configname):
 
 def write_plainconfig(configname, cfg):
     with open(configname, "w") as file:
+        _sanitize_video_sets_paths(cfg)
         YAML().dump(cfg, file)
+
+
+def _sanitize_video_sets_paths(cfg: dict) -> None:
+    """
+    Ensures paths used as keys in cfg['video_sets'] are single-line strings.
+
+    YAML may wrap long strings or users may accidentally introduce newlines; we
+    enforce that video paths written to the config contain no line breaks.
+    """
+    if not isinstance(cfg, dict):
+        return
+    video_sets = cfg.get("video_sets", None)
+    if not isinstance(video_sets, dict) or not video_sets:
+        return
+
+    sanitized = {}
+    changed = False
+    for k, v in video_sets.items():
+        if isinstance(k, str):
+            new_k = k.replace("\r", "").replace("\n", "").strip()
+            if new_k != k:
+                changed = True
+            k = new_k
+        if k in sanitized:
+            raise ValueError(
+                "Sanitizing line breaks in cfg['video_sets'] produced duplicate "
+                f"keys. Conflicting key: {k!r}"
+            )
+        sanitized[k] = v
+
+    if changed:
+        # Preserve original mapping type where possible (e.g., ruamel CommentedMap)
+        try:
+            video_sets.clear()
+            for k, v in sanitized.items():
+                video_sets[k] = v
+        except Exception:
+            cfg["video_sets"] = sanitized
 
 
 def attempt_to_make_folder(foldername, recursive=False):
